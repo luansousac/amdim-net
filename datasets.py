@@ -16,6 +16,7 @@ class Dataset(Enum):
     STL10 = 3
     IN128 = 4
     PLACES205 = 5
+    PILL = 6
 
 
 def get_encoder_size(dataset):
@@ -23,7 +24,7 @@ def get_encoder_size(dataset):
         return 32
     if dataset == Dataset.STL10:
         return 64
-    if dataset in [Dataset.IN128, Dataset.PLACES205]:
+    if dataset in [Dataset.IN128, Dataset.PLACES205, Dataset.PILL]:
         return 128
     raise RuntimeError("Couldn't get encoder size, unknown dataset: {}".format(dataset))
 
@@ -249,6 +250,12 @@ def build_dataset(dataset, batch_size, input_dir=None, labeled_only=False):
         test_transform = train_transform.test_transform
         train_dataset = datasets.ImageFolder(train_dir, train_transform)
         test_dataset = datasets.ImageFolder(val_dir, test_transform)
+    elif dataset == Dataset.PILL:
+        num_classes = 928
+        train_transform = TransformsImageNet128()
+        test_transform = train_transform.test_transform
+        train_dataset = datasets.ImageFolder(train_dir, train_transform)
+        test_dataset = datasets.ImageFolder(val_dir, test_transform)
 
     # build pytorch dataloaders for the datasets
     train_loader = \
@@ -274,11 +281,14 @@ def _get_directories(dataset, input_dir):
         # Pytorch will download those datasets automatically
         return None, None
     if dataset == Dataset.IN128:
-        train_dir = os.path.join(input_dir, 'ILSVRC2012_img_train/')
-        val_dir = os.path.join(input_dir, 'ILSVRC2012_img_val/')
+        train_dir = os.path.join(input_dir, 'images_train/')
+        val_dir = os.path.join(input_dir, 'images_val/')
     elif dataset == Dataset.PLACES205:
         train_dir = os.path.join(input_dir, 'places205_256_train/')
         val_dir = os.path.join(input_dir, 'places205_256_val/')
+    elif dataset == Dataset.PILL:
+        train_dir = os.path.join(input_dir, 'images_train/')
+        val_dir = os.path.join(input_dir, 'images_val/')
     else:
         raise 'Data directories for dataset ' + dataset + ' are not defined'
     return train_dir, val_dir
